@@ -1,0 +1,59 @@
+version: '3'
+services:
+  proxy:
+    image: dockercloud/haproxy
+    depends_on:
+      - broker
+    environment:
+      - BALANCE=leastconn
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - 80:80
+    networks:
+      - balancenet
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+  broker:
+    environment:
+      - SERVICE_PORTS=1883
+    env_file:
+      - .env
+    build: .
+    ports:
+      - "1883:1883"
+    deploy:
+      replicas: 4
+      update_config:
+        parallelism: 4
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+        window: 120s
+    networks:
+      - brokernet
+      - balancenet
+    depends_on:
+      - redis
+
+  redis:
+    image: "redis:alpine"
+    command: ["redis-server", "--appendonly", "yes"]
+    hostname: redis
+    restart: always
+    volumes:
+      - redis-data:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - brokernet
+
+networks:
+  brokernet:
+  balancenet:
+    driver: overlay
+volumes:
+  redis-data:
