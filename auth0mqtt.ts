@@ -8,6 +8,12 @@ import rp from "request-promise";
 
 
 class Auth0Mosca {
+    auth0Namespace: string;
+    connection: any;
+    clientId: string;
+    clientSecret: string;
+    clientAudience: string;
+    clientIssuer: string;
     constructor(auth0Namespace, clientId, clientSecret, connection, clientAudience, clientIssuer) {
         this.auth0Namespace = auth0Namespace
         this.connection = connection
@@ -19,7 +25,7 @@ class Auth0Mosca {
 
     authenticateWithJWT() {
 
-        return function (client, username, password, callback) {
+        return function (client, username: string, password: string, callback) {
 
             if (username !== 'JWT') {
                 return callback("Invalid Credentials", false)
@@ -86,7 +92,7 @@ class Auth0Mosca {
         }
     }
     authorizePublish() {
-        return function (client, topic, payload, callback) {
+        return function (client, topic: string, payload, callback) {
             // Checks if client has a deviceProfile property
             if (client.deviceProfile.topics !== undefined) {
                 callback(null, client.deviceProfile && client.deviceProfile.topics && client.deviceProfile.topics.indexOf(topic) > -1)
@@ -98,12 +104,14 @@ class Auth0Mosca {
     }
 
     authorizeSubscribe() {
-        // Checks if client has a deviceProfile property
-        if (client.deviceProfile.topics !== undefined) {
-            callback(null, client.deviceProfile && client.deviceProfile.topics && client.deviceProfile.topics.indexOf(topic) > -1)
-        } else {
-            // Check to see if client id is in the topic name
-            callback(null, topic.toString().indexOf(client.id.toString()) > -1)
+        return function (client, topic: string, callback) {
+            // Checks if client has a deviceProfile property
+            if (client.deviceProfile.topics !== undefined) {
+                callback(null, client.deviceProfile && client.deviceProfile.topics && client.deviceProfile.topics.indexOf(topic) > -1)
+            } else {
+                // Check to see if client id is in the topic name
+                callback(null, topic.toString().indexOf(client.id.toString()) > -1)
+            }
         }
     }
 }

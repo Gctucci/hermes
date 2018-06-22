@@ -8,10 +8,12 @@ WORKDIR /usr/src/hermes
 # where available (npm@5+)
 COPY package*.json ./
 
+COPY yarn.lock ./
+
 RUN yarn install
 
 # Bundle app source
 COPY . .
 
 EXPOSE 1883
-CMD [ "npm", "start" ]
+CMD [ "yarn", "start" ]

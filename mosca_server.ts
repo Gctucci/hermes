@@ -1,7 +1,4 @@
-import {
-    persistence as _persistence,
-    Server
-} from "mosca";
+import mosca from "mosca";
 import Auth0Mosca from "./auth0mqtt";
 
 const settings = {
@@ -16,7 +13,7 @@ const settings = {
         host: 'redis'
     },
     persistence: {
-        factory: _persistence.Redis,
+        factory: mosca.persistence.Redis,
         port: 6379,
         host: 'redis'
     }
@@ -33,7 +30,7 @@ var auth0 = new Auth0Mosca(
 )
 
 //Setup the Mosca server
-var server = new Server(settings)
+var server = new mosca.Server(settings)
 
 //Wire up authentication & authorization to mosca
 server.authenticate = auth0.authenticateWithJWT()
